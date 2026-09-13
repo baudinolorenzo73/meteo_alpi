@@ -1,0 +1,24 @@
+# File di ambiente con chiavi API — non committare MAI
+.env
+open.env
+*.env
+!.env.example
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# Node (se in futuro si aggiungono strumenti di build)
+node_modules/
+package-lock.json
+
+# File temporanei
+*.tmp
+*.log
