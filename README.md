@@ -26,8 +26,10 @@ Non serve installare nulla: è un **singolo file HTML**.
 2. Aprilo nel browser
 
 Per metterlo sulla schermata Home del telefono (si apre a schermo intero, come un'app):
-- **Android**: menu ⋮ → "Aggiungi a schermata Home"
+- **Android**: apri il sito con Chrome → menu ⋮ → "Installa app"
 - **iPhone/iPad**: Safari → icona condivisione → "Aggiungi alla schermata Home"
+
+L'app è una PWA: dopo il primo caricamento può avviarsi anche senza connessione. Per aggiornare dati e previsioni serve comunque una connessione Internet.
 
 > **Nota per Android**: alcuni browser bloccano le richieste di rete dai file aperti con `file://`. Se la ricerca non funziona, servi il file con un piccolo server locale:
 > ```bash
