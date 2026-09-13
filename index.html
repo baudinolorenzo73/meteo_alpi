@@ -1,0 +1,2056 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meteo Alpi — Confronto Modelli</title>
+<meta name="theme-color" content="#0f1a22">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Meteo Alpi">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f1a22'/%3E%3Cpath d='M20 75 L40 40 L52 58 L62 42 L82 75 Z' fill='%234fb3c9'/%3E%3Ccircle cx='68' cy='28' r='9' fill='%23e0a458'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f1a22'/%3E%3Cpath d='M20 75 L40 40 L52 58 L62 42 L82 75 Z' fill='%234fb3c9'/%3E%3Ccircle cx='68' cy='28' r='9' fill='%23e0a458'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0f1a22;
+    --bg2: #0a1319;
+    --panel: #16232d;
+    --panel2: #1e2f3b;
+    --border: #2b4152;
+    --text: #e8f0f4;
+    --muted: #8fa5b3;
+    --accent: #4fb3c9;
+    --accent2: #e0a458;
+    --good: #6ec98f;
+    --warn: #e0a458;
+    --bad: #e07458;
+    --accent-bg: #1c3540;
+    --good-bg: #173320;
+    --warn-bg: #33280f;
+    --bad-bg: #331610;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, Roboto, "Segoe UI", sans-serif;
+    background: linear-gradient(180deg, var(--bg), var(--bg2));
+    color: var(--text);
+    padding: 12px;
+    min-height: 100vh;
+  }
+  .container { margin: 0 auto; }
+
+  /* Layout: Auto — responsivo via breakpoint standard */
+  body.layout-auto .container { max-width: 480px; }
+  @media (min-width: 700px) {
+    body.layout-auto .container { max-width: 720px; }
+  }
+  @media (min-width: 1000px) {
+    body.layout-auto .container { max-width: 960px; }
+  }
+
+  /* Layout fissi indipendenti dallo schermo */
+  body.layout-smartphone .container { max-width: 420px; }
+  body.layout-tablet .container { max-width: 740px; }
+  body.layout-computer .container { max-width: 1080px; }
+  body.layout-minimal .container { max-width: 420px; }
+
+  /* Minimal: via le spiegazioni discorsive, meno spazi */
+  body.layout-minimal .note,
+  body.layout-minimal .opt-desc,
+  body.layout-minimal .sub {
+    display: none !important;
+  }
+  body.layout-minimal .card { padding: 9px; margin-bottom: 8px; }
+  body.layout-minimal .section-label { margin: 4px 0 3px; }
+  body.layout-minimal h1 { font-size: 1.05rem; margin: 2px 0; }
+  body.layout-minimal .model-opt { padding: 6px 8px; }
+
+  h1 {
+    font-size: 1.3rem;
+    margin: 4px 0 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 14px; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  summary { color: var(--text); }
+  summary::marker { color: var(--accent); }
+
+  .banner {
+    background: #33280f;
+    border: 1px solid var(--warn);
+    color: var(--warn);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+  .banner code {
+    background: #00000033;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.78rem;
+  }
+
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input[type="text"] {
+    flex: 1;
+    min-width: 140px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+  }
+  button {
+    background: var(--accent);
+    color: #06181f;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  button.secondary {
+    background: var(--panel2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  button.icon-btn { padding: 10px 12px; }
+  button:active { transform: scale(0.97); }
+  button:disabled { opacity: 0.5; }
+
+  label.chk {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .suggestions {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .suggestion-item {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .suggestion-item:hover { border-color: var(--accent); }
+
+  .section-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin: 10px 0 6px;
+  }
+
+  .fav-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+  .day-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    scroll-snap-type: x proximity;
+  }
+  .day-tab {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    background: var(--panel2);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 8px 14px;
+    text-align: center;
+    cursor: pointer;
+    min-width: 68px;
+  }
+  .day-tab .dt-name { font-size: 0.68rem; text-transform: uppercase; color: var(--muted); }
+  .day-tab .dt-num { font-size: 1.1rem; font-weight: 700; margin-top: 2px; }
+  .day-tab.active { border-color: var(--accent); background: var(--accent-bg); }
+  .day-tab.active .dt-name, .day-tab.active .dt-num { color: var(--accent); }
+  .day-tab .dt-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin-top: 4px;
+  }
+
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 50;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal-panel {
+    background: var(--panel);
+    width: 100%;
+    max-width: 480px;
+    max-height: 85vh;
+    border-radius: 18px 18px 0 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .modal-header strong { font-size: 1rem; }
+  .modal-close {
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: var(--muted);
+    padding: 2px 8px;
+  }
+  .modal-body {
+    padding: 16px 18px 24px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .help-h {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 0.9rem;
+    margin-top: 16px;
+    margin-bottom: 4px;
+  }
+  .help-h:first-child { margin-top: 0; }
+  .config-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 10px 18px 0;
+    overflow-x: auto;
+    flex-shrink: 0;
+  }
+  .config-tab {
+    flex: 0 0 auto;
+    background: var(--panel2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 10px 10px 0 0;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .config-tab.active { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+
+  .fav-chip {
+    background: var(--panel2);
+    border: 2px solid var(--border);
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .fav-chip .rm { color: var(--bad); font-weight: bold; padding: 0 2px; }
+  .fav-chip.active {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+    font-weight: 700;
+    color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .fav-empty { color: var(--muted); font-size: 0.8rem; }
+
+  .var-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .var-chip { font-size: 0.74rem; padding: 5px 9px; }
+
+  .link-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .link-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 9px 12px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .link-item .go { color: var(--accent); font-weight: 600; }
+
+  .model-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .model-opt {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+  }
+  .model-opt.checked { border-color: var(--accent); background: var(--accent-bg); }
+  .model-opt input { accent-color: var(--accent); width: 16px; height: 16px; }
+  .model-opt .opt-title { display: flex; align-items: center; gap: 8px; }
+  .model-opt .opt-desc { color: var(--muted); font-size: 0.7rem; line-height: 1.3; padding-left: 24px; }
+
+  .loc-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 2px; }
+  .loc-meta { color: var(--muted); font-size: 0.78rem; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 10px; }
+  th, td { padding: 7px 6px; text-align: center; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; font-size: 0.72rem; text-transform: uppercase; }
+  td.model-name { text-align: left; color: var(--accent); font-weight: 600; }
+
+  .agree-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
+  .agree-high { background: var(--good-bg); color: var(--good); }
+  .agree-mid { background: var(--warn-bg); color: var(--warn); }
+  .agree-low { background: var(--bad-bg); color: var(--bad); }
+
+  .note {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.4;
+    margin-top: 10px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+  .status { font-size: 0.85rem; color: var(--muted); margin-top: 8px; }
+  .error { color: var(--bad); font-size: 0.85rem; margin-top: 8px; line-height: 1.4; }
+  .day-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .clickable-cell { cursor: pointer; }
+  .clickable-cell:active { background: var(--accent-bg); }
+  .cell-detail-slot:empty { display: none; }
+  .cell-detail-card {
+    background: var(--panel2);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 0.78rem;
+    text-align: center;
+  }
+  .detail-grid .opt-desc { padding-left: 0; }
+  .toast {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #06181f;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .toast.show { opacity: 1; }
+
+  .offline-banner {
+    background: var(--good-bg);
+    border: 1px solid var(--good);
+    color: var(--good);
+    border-radius: 12px;
+    padding: 9px 12px;
+    font-size: 0.78rem;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .offline-banner button {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+</style>
+</head>
+<body>
+<div id="appContainer" class="container">
+
+<div style="text-align:center;">
+  <h1 style="justify-content:center;font-size:1.6rem;margin-bottom:2px;">⛰️ Meteo Alpi</h1>
+  <div class="sub" style="margin-bottom:2px;">Confronto multi-modello</div>
+  <div style="font-size:0.7rem;color:var(--muted);margin-bottom:12px;">by Lollo ®2026</div>
+  <div class="row" style="justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;">
+    <button class="icon-btn secondary" id="helpBtn" title="Aiuto">❓</button>
+    <button class="icon-btn secondary" id="contactsBtn" title="Contatti">📞</button>
+    <button class="icon-btn secondary" id="refreshHeaderBtn" title="Aggiorna la località aperta">🔄</button>
+    <button class="icon-btn secondary" id="configBtn" title="Impostazioni">⚙️</button>
+    <span class="status" id="connStatus" style="margin:0;"></span>
+  </div>
+</div>
+
+<div id="protocolBanner"></div>
+
+<div id="locationHero" style="display:none;text-align:center;margin:16px 0;">
+  <div id="locationHeroName" style="font-size:1.25rem;font-weight:700;color:var(--text);"></div>
+  <button class="secondary" id="heroBollettiniBtn" style="margin-top:10px;">📋 Bollettini ufficiali</button>
+</div>
+
+<div class="card">
+  <div class="section-label">📥 Uso offline</div>
+  <div class="row">
+    <button class="secondary" id="downloadAllBtn" style="width:100%;">📥 Scarica tutti i preferiti per uso offline</button>
+  </div>
+  <div class="row" style="margin-top:8px;">
+    <label class="chk"><input type="checkbox" id="autoDownloadToggle"> 🔔 Scarica automaticamente quando torna la linea</label>
+  </div>
+  <div class="status" id="downloadStatus"></div>
+
+  <details style="margin-top:10px;">
+    <summary style="cursor:pointer;font-size:0.8rem;color:var(--muted);">💾 Salvataggio su file (backup vero, fuori dal browser)</summary>
+    <div style="margin-top:8px;">
+      <div class="row">
+        <button class="secondary" id="exportBtn" style="flex:1;">💾 Esporta su file</button>
+        <label class="secondary" style="flex:1;text-align:center;padding:10px 14px;border-radius:10px;border:1px solid var(--border);cursor:pointer;margin:0;">
+          📂 Importa da file
+          <input type="file" id="importFile" accept="application/json" style="display:none;">
+        </label>
+      </div>
+      <div class="note" style="margin-top:8px;padding-top:8px;font-size:0.72rem;">
+        Il file va nella cartella Download del telefono: puoi copiarlo, condividerlo o tenerlo come backup indipendente dal browser (utile se cambi telefono o cancelli i dati dell'app).
+      </div>
+    </div>
+  </details>
+</div>
+
+<div class="card">
+  <div class="section-label">Cerca una località</div>
+  <div class="row">
+    <label class="chk"><input type="checkbox" id="onlyItaly"> Solo Italia</label>
+  </div>
+  <div class="row" style="margin-top:8px;">
+    <input type="text" id="searchInput" placeholder="Cerca località (qualsiasi comune italiano o estero)">
+    <button class="icon-btn secondary" id="gpsBtn" title="Usa posizione GPS">📍</button>
+    <button id="searchBtn">Cerca</button>
+  </div>
+  <div class="suggestions" id="suggestions"></div>
+
+  <div class="section-label" style="margin-top:14px;">Preferiti</div>
+  <div class="fav-list" id="favList"></div>
+</div>
+
+<div id="resultArea"></div>
+
+<!-- ===== Pannello Aiuto ===== -->
+<div class="modal-backdrop" id="helpModalBackdrop">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <strong>ℹ️ Guida completa a Meteo Alpi</strong>
+      <span class="modal-close" id="helpCloseBtn">✕</span>
+    </div>
+    <div class="modal-body">
+
+      <div class="help-h">🎯 Cos'è questa app</div>
+      Confronta le previsioni di più modelli meteorologici nazionali (italiano, tedesco, europeo, francese, americano, canadese, giapponese...) fianco a fianco, per capire quanto puoi fidarti di una previsione in montagna: se i modelli concordano, la previsione è più solida; se divergono, c'è più incertezza. Nessuna AI "inventa" il meteo: tutti i dati vengono da modelli meteorologici ufficiali gratuiti (Open-Meteo).
+
+      <div class="help-h">🔍 Cercare una località</div>
+      Scrivi il nome di un comune nella barra di ricerca, oppure tocca 📍 per usare il GPS. La casella "Solo Italia" filtra i risultati ai soli comuni italiani, utile per nomi condivisi con l'estero.
+
+      <div class="help-h">📋 La scheda di una località</div>
+      Mostra nome, regione, altitudine e coordinate. Da lì puoi aggiungerla ai preferiti, aggiornarla, confrontarla con salvataggi passati (se presenti) e aprire i bollettini ufficiali della zona (ARPA, Aeronautica Militare, AINEVA, e gli equivalenti esteri per le località oltreconfine).
+
+      <div class="help-h">📅 I giorni e il dettaglio orario</div>
+      I 5 giorni di previsione sono schede scorrevoli orizzontalmente: tocca una data per aprirla. Il pallino colorato su ogni scheda anticipa quanto i modelli concordano (verde=concordi, arancio=parziale, rosso=molto discordi) anche prima di aprirla. Dentro ogni giorno trovi la tabella riassuntiva e un dettaglio "Ora per ora" o "Fasce" (Notte/Mattina/Pomeriggio/Sera), con un menu per scegliere quale grandezza vedere (temperatura, umidità, pressione, vento, raffiche, nuvolosità, pioggia). Tocca una qualsiasi cella per il dettaglio completo di quel punto.
+
+      <div class="help-h">⭐ Preferiti</div>
+      Salva le località che usi spesso: compaiono come chip cliccabili, un tap le riapre subito.
+
+      <div class="help-h">🕓 Storico dei salvataggi</div>
+      Ogni volta che scarichi dati per una località vengono conservati fino a 3 salvataggi passati (distanziati almeno 30 minuti tra loro, per evitare doppioni da tap ripetuti). Nella scheda di ogni luogo puoi confrontare "Attuale" con uno storico per vedere come è cambiata la previsione nel tempo.
+
+      <div class="help-h">📡 Uso offline</div>
+      Prima di partire per una zona senza segnale, apri le località che ti servono e premi "📥 Scarica tutti i preferiti". L'opzione "🔔 Scarica automaticamente quando torna la linea" rileva da sola la connessione e riscarica i dati — ma funziona solo mentre questa pagina resta aperta in una scheda del browser: non è un vero servizio di sistema in background, quindi lo scarico manuale resta la garanzia più sicura.
+
+      <div class="help-h">💾 Salvataggio su file</div>
+      "Esporta su file" crea un vero file di backup nella cartella Download del telefono, leggibile da qualsiasi gestore file o da Termux — utile se cambi dispositivo o cancelli i dati del browser. "Importa da file" fa il percorso inverso.
+
+      <div class="help-h">🤖 Parere AI</div>
+      Un pulsante per chiedere a un'intelligenza artificiale un riassunto in linguaggio semplice dei dati già scaricati per quel giorno — mai il contrario: l'AI non inventa numeri meteo, li legge e li commenta. Va configurata una volta sola in Impostazioni → AI: scegli Groq (gratuito, 2 minuti per la chiave, guida passo passo inclusa) o un altro provider tra Google Gemini, OpenRouter e Cerebras.
+
+      <div class="help-h">⚙️ Impostazioni</div>
+      Tre sezioni: <strong>Modelli</strong> (quali dei 9 modelli meteorologici confrontare), <strong>Aspetto</strong> (temi colore: Notte, Giorno, Ghiaccio, Tramonto) e <strong>Layout</strong> (larghezza dell'interfaccia: Auto, Smartphone, Tablet, Computer, Minimal).
+
+      <div class="help-h">⚠️ Limiti da tenere a mente</div>
+      I dati grezzi di modello non sostituiscono i bollettini regionali ufficiali né i bollettini valanghe. In montagna la divergenza tra modelli è frequente: usa il confronto per capire il margine di incertezza, non come previsione definitiva.
+    </div>
+  </div>
+</div>
+
+<!-- ===== Pannello Contatti ===== -->
+<div class="modal-backdrop" id="contactsModalBackdrop">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <strong>📞 Contatti</strong>
+      <span class="modal-close" id="contactsCloseBtn">✕</span>
+    </div>
+    <div class="modal-body">
+      <div class="link-list">
+        <a class="link-item" href="mailto:baudinolorenzo@gmail.com"><span>✉️ baudinolorenzo@gmail.com</span><span class="go">Scrivi →</span></a>
+        <a class="link-item" href="https://wa.me/393207236032" target="_blank" rel="noopener"><span>💬 WhatsApp — 320 723 6032</span><span class="go">Apri →</span></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Pannello Bollettini ufficiali (località attuale) ===== -->
+<div class="modal-backdrop" id="bollettiniModalBackdrop">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <strong>📋 Bollettini ufficiali</strong>
+      <span class="modal-close" id="bollettiniCloseBtn">✕</span>
+    </div>
+    <div class="modal-body">
+      <div class="link-list" id="bollettiniModalBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Pannello Impostazioni (a schede) ===== -->
+<div class="modal-backdrop" id="configModalBackdrop">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <strong>⚙️ Impostazioni</strong>
+      <span class="modal-close" id="configCloseBtn">✕</span>
+    </div>
+    <div class="config-tabs">
+      <button class="config-tab active" data-tab="modelli">🌦️ Modelli</button>
+      <button class="config-tab" data-tab="aspetto">🎨 Aspetto</button>
+      <button class="config-tab" data-tab="layout">📐 Layout</button>
+      <button class="config-tab" data-tab="ai">🤖 AI</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="config-pane" data-pane="modelli">
+        <div class="note" style="margin-top:0;padding-top:0;border-top:none;">
+          Un "modello meteorologico" è semplicemente il calcolo delle previsioni fatto da un servizio meteo nazionale (Germania, Francia, USA...). Ognuno usa dati e metodi leggermente diversi, quindi risultati un po' diversi tra loro sono normali — soprattutto in montagna. Confrontarli aiuta a capire quanto puoi fidarti della previsione.
+        </div>
+        <div class="model-grid" id="modelGrid"></div>
+      </div>
+
+      <div class="config-pane" data-pane="aspetto" style="display:none;">
+        <div class="row">
+          <select id="themeSelect" style="flex:1;background:var(--panel2);color:var(--text);border:1px solid var(--border);padding:10px;border-radius:10px;font-size:0.9rem;">
+            <option value="notte">🌙 Notte (predefinito)</option>
+            <option value="giorno">☀️ Giorno</option>
+            <option value="ghiaccio">🧊 Ghiaccio</option>
+            <option value="tramonto">🌄 Tramonto</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="config-pane" data-pane="layout" style="display:none;">
+        <div class="row">
+          <select id="layoutSelect" style="flex:1;background:var(--panel2);color:var(--text);border:1px solid var(--border);padding:10px;border-radius:10px;font-size:0.9rem;">
+            <option value="auto">🔁 Auto (si adatta allo schermo)</option>
+            <option value="smartphone">📱 Smartphone</option>
+            <option value="tablet">📔 Tablet</option>
+            <option value="computer">🖥️ Computer</option>
+            <option value="minimal">✏️ Minimal</option>
+          </select>
+        </div>
+        <div class="note" style="margin-top:8px;padding-top:8px;font-size:0.72rem;">
+          "Auto" adatta la larghezza allo schermo. Gli altri forzano una larghezza fissa indipendentemente dal dispositivo. "Minimal" nasconde le spiegazioni discorsive e riduce gli spazi, per chi vuole solo i dati essenziali.
+        </div>
+      </div>
+
+      <div class="config-pane" data-pane="ai" style="display:none;">
+        <div class="note" style="margin-top:0;padding-top:0;border-top:none;">
+          <strong>Nessun servizio è davvero garantito "per sempre" senza chiave</strong>
+          <div style="margin-top:8px;">
+            Ho controllato: <strong>LLM7.io</strong> oggi funziona senza chiave (verificato in diretta il 21 agosto 2026, limiti di circa 60 richieste/ora — più che sufficienti per un tap ogni tanto), ma è un servizio community senza garanzie, e proprio come è appena successo a Pollinations potrebbe smettere di funzionare senza preavviso. Puoi provarlo scegliendolo dal menu qui sotto.
+          </div>
+          <div style="margin-top:8px;">
+            Se lo vuoi <strong>affidabile nel tempo</strong>, l'unica strada resta un provider con account gratuito — <strong>Groq</strong> è il più semplice. Ecco come fare, 2 minuti, nessuna carta di credito:
+          </div>
+          <strong style="display:block;margin-top:12px;">🔑 Come ottenere una chiave Groq gratuita</strong>
+          <div style="margin-top:10px;">
+            <strong>1.</strong> Apri <strong>console.groq.com</strong> nel browser (puoi copiare l'indirizzo e incollarlo in una nuova scheda).
+          </div>
+          <div style="margin-top:8px;">
+            <strong>2.</strong> Tocca "Sign Up" e registrati — con email, Google o GitHub, quello che preferisci. Ti verrà chiesto di confermare l'email.
+          </div>
+          <div style="margin-top:8px;">
+            <strong>3.</strong> Una volta dentro, cerca nel menu la voce <strong>"API Keys"</strong> (di solito nella barra laterale).
+          </div>
+          <div style="margin-top:8px;">
+            <strong>4.</strong> Tocca <strong>"Create API Key"</strong>, dai un nome a piacere (es. "Meteo Alpi") e conferma.
+          </div>
+          <div style="margin-top:8px;">
+            <strong>5.</strong> Comparirà una stringa che inizia con <strong>gsk_...</strong> — <strong>copiala subito</strong>: Groq la mostra una sola volta, se la perdi dovrai crearne un'altra (gratis, si può rifare quante volte serve).
+          </div>
+          <div style="margin-top:8px;">
+            <strong>6.</strong> Torna qui, scegli "Groq" dal menu sotto, incolla la chiave nel campo "Chiave API" e tocca Salva.
+          </div>
+          <div style="margin-top:10px;">
+            È davvero gratuito: Groq offre un piano gratuito con limiti generosi (pensato apposta per progetti come questo), senza bisogno di carta di credito né abbonamento. L'unico "costo" è il paio di minuti per la registrazione.
+          </div>
+          <div style="margin-top:10px;">
+            Un browser non può leggere la chiave da un file come open.env sul telefono per motivi di sicurezza: va incollata qui manualmente, una volta sola — resta salvata solo su questo dispositivo, mai nel file HTML. In ogni caso, l'AI non "conosce" il meteo da sola: le passo i dati già scaricati dai modelli e le chiedo solo un parere in linguaggio semplice, molto più affidabile che chiederle di indovinare numeri.
+          </div>
+        </div>
+        <div class="row">
+          <select id="aiProviderPreset" style="flex:1;background:var(--panel2);color:var(--text);border:1px solid var(--border);padding:10px;border-radius:10px;font-size:0.85rem;">
+            <option value="" selected disabled>Scegli un provider...</option>
+            <option value="llm7">LLM7.io — senza chiave, ma può cambiare senza preavviso</option>
+            <option value="groq20">Groq — gpt-oss-20b (consigliato, più solido nel tempo)</option>
+            <option value="groq120">Groq — gpt-oss-120b (qualità)</option>
+            <option value="gemini">Google Gemini — gemini-flash-latest</option>
+            <option value="openrouter">OpenRouter — router gratuito</option>
+            <option value="cerebras">Cerebras — llama-3.3-70b (free)</option>
+            <option value="pollinations">Pollinations — spesso richiede pagamento anche senza chiave</option>
+            <option value="custom">Personalizzato...</option>
+          </select>
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <input type="text" id="aiBaseUrl" placeholder="URL endpoint (es. https://api.groq.com/openai/v1/chat/completions)" style="flex:1;background:var(--panel2);color:var(--text);border:1px solid var(--border);padding:10px;border-radius:10px;font-size:0.82rem;">
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <input type="text" id="aiModel" placeholder="Nome modello (es. openai/gpt-oss-20b)" style="flex:1;background:var(--panel2);color:var(--text);border:1px solid var(--border);padding:10px;border-radius:10px;font-size:0.82rem;">
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <input type="password" id="aiApiKey" placeholder="Chiave API (es. gsk_...)" style="flex:1;background:var(--panel2);color:var(--text);border:1px solid var(--border);padding:10px;border-radius:10px;font-size:0.82rem;">
+          <button class="secondary" id="aiSaveBtn">Salva</button>
+        </div>
+        <div class="status" id="aiSaveStatus"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const ALL_MODELS = [
+  { id: "italia_meteo_arpae_icon_2i", label: "🇮🇹 ICON-2I (ItaliaMeteo/ARPAE)", desc: "Modello ufficiale italiano (erede del vecchio servizio Aeronautica Militare/ARPA-SIMC). Altissima risoluzione (2 km) su Italia e Mediterraneo. Copre solo 3 giorni." },
+  { id: "icon_seamless", label: "ICON (DWD)", desc: "Servizio meteo tedesco. Molto usato e affidabile su Alpi e Italia." },
+  { id: "ecmwf_ifs025", label: "ECMWF", desc: "Centro europeo (Reading, UK). Considerato il modello più affidabile in assoluto." },
+  { id: "meteofrance_seamless", label: "Météo-France", desc: "Servizio meteo francese. Preciso sul versante francese delle Alpi." },
+  { id: "gfs_seamless", label: "GFS (NOAA)", desc: "Servizio meteo americano. Utile come confronto indipendente dagli europei." },
+  { id: "gem_seamless", label: "GEM (Canada)", desc: "Servizio meteo canadese. Un ulteriore punto di vista indipendente." },
+  { id: "jma_seamless", label: "JMA (Giappone)", desc: "Servizio meteo giapponese. Meno specializzato sull'Europa, utile solo come controllo extra." },
+  { id: "icon_d2", label: "ICON-D2 (alta risoluzione)", desc: "Versione ad altissimo dettaglio di ICON, pensata per l'Europa centrale (Alpi comprese)." },
+  { id: "meteofrance_arome_france", label: "AROME (alta risoluzione FR)", desc: "Versione ad altissimo dettaglio di Météo-France, molto precisa vicino al confine francese." }
+];
+const DEFAULT_MODEL_IDS = ["italia_meteo_arpae_icon_2i", "icon_seamless", "ecmwf_ifs025", "meteofrance_seamless", "gfs_seamless"];
+
+const FAV_KEY = "meteoAlpiFavorites";
+const MODEL_KEY = "meteoAlpiModels";
+
+let favorites = JSON.parse(localStorage.getItem(FAV_KEY) || "[]");
+let selectedModelIds = JSON.parse(localStorage.getItem(MODEL_KEY) || JSON.stringify(DEFAULT_MODEL_IDS));
+let activeLoc = null;
+let lastData = null;
+let lastLocKey = null;
+
+function cacheKeyFor(loc) {
+  return `meteoAlpiCache::${loc.lat.toFixed(3)}::${loc.lon.toFixed(3)}`;
+}
+function saveCache(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify({ timestamp: Date.now(), data }));
+    return true;
+  } catch (e) {
+    return false; // storage piena o non disponibile
+  }
+}
+function readCache(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+function formatTimestamp(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString("it-IT", { day: "numeric", month: "short" }) + " alle " +
+    d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+}
+
+// --- Storico salvataggi (fino a 3, distanziati almeno 30 minuti) ---
+const HISTORY_MIN_GAP_MS = 30 * 60 * 1000;
+const HISTORY_MAX_ENTRIES = 3;
+
+function historyKeyFor(loc) {
+  return `meteoAlpiHistory::${loc.lat.toFixed(3)}::${loc.lon.toFixed(3)}`;
+}
+function readHistory(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (e) {
+    return [];
+  }
+}
+function maybeAppendHistory(loc, data) {
+  const key = historyKeyFor(loc);
+  let hist = readHistory(key);
+  const now = Date.now();
+  const last = hist[hist.length - 1];
+  if (last && (now - last.timestamp) < HISTORY_MIN_GAP_MS) {
+    // Troppo ravvicinato (es. tap ripetuti per sbaglio): non aggiunge un nuovo salvataggio storico,
+    // la copia "attuale" (cache separata) resta comunque sempre aggiornata.
+    return;
+  }
+  hist.push({ timestamp: now, data });
+  if (hist.length > HISTORY_MAX_ENTRIES) hist = hist.slice(hist.length - HISTORY_MAX_ENTRIES);
+  try {
+    localStorage.setItem(key, JSON.stringify(hist));
+  } catch (e) {
+    // storage piena: proviamo a tenere solo gli ultimi 2
+    try {
+      localStorage.setItem(key, JSON.stringify(hist.slice(-2)));
+    } catch (e2) { /* rinuncia, non blocchiamo l'app */ }
+  }
+}
+
+const searchInput = document.getElementById("searchInput");
+const suggestionsEl = document.getElementById("suggestions");
+const favListEl = document.getElementById("favList");
+const resultArea = document.getElementById("resultArea");
+const modelGridEl = document.getElementById("modelGrid");
+const onlyItalyEl = document.getElementById("onlyItaly");
+const toastEl = document.getElementById("toast");
+
+// Protezione minima contro caratteri speciali nei dati che arrivano dalle API
+// (nomi di località, etichette): evita che finiscano interpretati come HTML.
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  setTimeout(() => toastEl.classList.remove("show"), 1800);
+}
+
+// Avviso se aperto come file locale (fetch spesso bloccato dal browser)
+if (location.protocol === "file:") {
+  document.getElementById("protocolBanner").innerHTML = `
+    <div class="banner">
+      ⚠️ Stai aprendo questo file direttamente (file://). Alcuni browser Android bloccano le richieste di rete in questa modalità e la ricerca/meteo potrebbero fallire con "errore di ricerca".<br>
+      Soluzione consigliata in Termux: <code>python -m http.server 8080</code> nella cartella del file, poi apri <code>http://localhost:8080/meteo_alpi.html</code> nel browser.
+    </div>`;
+}
+
+function renderModelGrid() {
+  modelGridEl.innerHTML = "";
+  ALL_MODELS.forEach(m => {
+    const checked = selectedModelIds.includes(m.id);
+    const div = document.createElement("label");
+    div.className = "model-opt" + (checked ? " checked" : "");
+    div.innerHTML = `<div class="opt-title"><input type="checkbox" data-id="${m.id}" ${checked ? "checked" : ""}> ${m.label}</div>` +
+      (m.desc ? `<div class="opt-desc">${m.desc}</div>` : "");
+    div.querySelector("input").addEventListener("change", (e) => {
+      if (e.target.checked) {
+        if (!selectedModelIds.includes(m.id)) selectedModelIds.push(m.id);
+      } else {
+        if (selectedModelIds.length <= 1) {
+          e.target.checked = true;
+          showToast("Serve almeno un modello selezionato");
+          return;
+        }
+        selectedModelIds = selectedModelIds.filter(id => id !== m.id);
+      }
+      localStorage.setItem(MODEL_KEY, JSON.stringify(selectedModelIds));
+      renderModelGrid();
+      if (activeLoc) {
+        const key = cacheKeyFor(activeLoc);
+        if (lastData && lastLocKey === key) {
+          // Dati già disponibili in memoria: nessun bisogno di rete, utile offline
+          renderResults(activeLoc, lastData, activeModels(), { fresh: null, timestamp: null, noFetchNeeded: true });
+        } else {
+          loadLocation(activeLoc);
+        }
+      }
+    });
+    modelGridEl.appendChild(div);
+  });
+}
+
+function activeModels() {
+  return ALL_MODELS.filter(m => selectedModelIds.includes(m.id));
+}
+
+function saveFavorites() {
+  localStorage.setItem(FAV_KEY, JSON.stringify(favorites));
+  renderFavorites();
+}
+
+function renderFavorites() {
+  favListEl.innerHTML = "";
+  if (favorites.length === 0) {
+    favListEl.innerHTML = '<span class="fav-empty">Nessun preferito ancora. Cerca una località, apri i risultati e premi "☆ Aggiungi ai preferiti".</span>';
+    return;
+  }
+  favorites.forEach((f, i) => {
+    const chip = document.createElement("div");
+    const isActive = activeLoc && activeLoc.name === f.name;
+    chip.className = "fav-chip" + (isActive ? " active" : "");
+    chip.innerHTML = `<span>${isActive ? "📍 " : ""}${esc(f.name)}</span><span class="rm" data-idx="${i}">✕</span>`;
+    chip.addEventListener("click", (e) => {
+      if (e.target.classList.contains("rm")) {
+        favorites.splice(parseInt(e.target.dataset.idx), 1);
+        saveFavorites();
+        return;
+      }
+      loadLocation(f);
+    });
+    favListEl.appendChild(chip);
+  });
+}
+
+function isFavorite(loc) {
+  return favorites.some(f => f.name === loc.name);
+}
+
+function toggleFavorite(loc) {
+  if (isFavorite(loc)) {
+    favorites = favorites.filter(f => f.name !== loc.name);
+    showToast("Rimosso dai preferiti");
+  } else {
+    favorites.push(loc);
+    showToast("Aggiunto ai preferiti");
+  }
+  saveFavorites();
+}
+
+async function geocode(query) {
+  let url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=it&format=json`;
+  if (onlyItalyEl.checked) url += "&countryCode=IT";
+  const res = await fetch(url, { mode: "cors" });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const data = await res.json();
+  return data.results || [];
+}
+
+function renderSuggestions(results) {
+  suggestionsEl.innerHTML = "";
+  results.forEach(r => {
+    const div = document.createElement("div");
+    div.className = "suggestion-item";
+    const region = [r.admin2, r.admin1, r.country].filter(Boolean).join(", ");
+    div.textContent = `${r.name} (${r.elevation ?? "?"} m) — ${region}`;
+    div.addEventListener("click", () => {
+      loadLocation({ name: r.name, lat: r.latitude, lon: r.longitude, elevation: r.elevation, region });
+      suggestionsEl.innerHTML = "";
+      searchInput.value = "";
+    });
+    suggestionsEl.appendChild(div);
+  });
+}
+
+document.getElementById("searchBtn").addEventListener("click", doSearch);
+searchInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
+onlyItalyEl.addEventListener("change", () => {
+  if (searchInput.value.trim()) doSearch();
+});
+
+async function doSearch() {
+  const q = searchInput.value.trim();
+  if (!q) return;
+  suggestionsEl.innerHTML = '<div class="status">Ricerca in corso...</div>';
+  try {
+    const results = await geocode(q);
+    if (results.length === 0) {
+      suggestionsEl.innerHTML = '<div class="error">Nessuna località trovata. Prova un nome diverso o disattiva "Solo Italia".</div>';
+      return;
+    }
+    renderSuggestions(results);
+  } catch (err) {
+    suggestionsEl.innerHTML = `<div class="error">Errore di ricerca: ${err.message || "rete non raggiungibile"}.<br>Verifica la connessione internet` +
+      (location.protocol === "file:" ? ` o apri il file tramite un server locale (vedi avviso sopra).` : `.`) + `</div>`;
+  }
+}
+
+document.getElementById("gpsBtn").addEventListener("click", () => {
+  if (!navigator.geolocation) {
+    alert("Geolocalizzazione non supportata su questo dispositivo/browser.");
+    return;
+  }
+  resultArea.innerHTML = '<div class="card status">Rilevamento posizione GPS...</div>';
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      loadLocation({
+        name: "Posizione attuale",
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+        region: `±${Math.round(pos.coords.accuracy)} m`
+      });
+    },
+    (err) => {
+      resultArea.innerHTML = `<div class="card error">GPS non disponibile: ${err.message}</div>`;
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+});
+
+function updateLocationHero() {
+  const hero = document.getElementById("locationHero");
+  const nameEl = document.getElementById("locationHeroName");
+  if (!activeLoc) {
+    hero.style.display = "none";
+    return;
+  }
+  nameEl.textContent = "📍 " + activeLoc.name;
+  hero.style.display = "block";
+}
+
+async function loadLocation(loc, forceRefresh) {
+  activeLoc = loc;
+  renderFavorites();
+  updateLocationHero();
+  const key = cacheKeyFor(loc);
+
+  if (!forceRefresh) {
+    resultArea.innerHTML = '<div class="card status">Caricamento dati meteo...</div>';
+  } else {
+    resultArea.innerHTML = '<div class="card status">Aggiornamento dati meteo...</div>';
+  }
+
+  // Scarichiamo sempre TUTTI i modelli disponibili (non solo quelli selezionati):
+  // così i dati restano completi in cache e cambiare la selezione dei modelli
+  // dopo, anche offline, non richiede una nuova connessione.
+  const modelParam = ALL_MODELS.map(m => m.id).join(",");
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
+    `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,windgusts_10m_max,uv_index_max,snowfall_sum,weathercode` +
+    `&hourly=temperature_2m,precipitation,weathercode,relative_humidity_2m,surface_pressure,windspeed_10m,winddirection_10m,windgusts_10m,cloudcover` +
+    `&models=${modelParam}&timezone=auto&forecast_days=5`;
+
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    saveCache(key, data);
+    maybeAppendHistory(loc, data);
+    lastData = data;
+    lastLocKey = key;
+    renderResults(loc, data, activeModels(), { fresh: true, timestamp: Date.now() });
+  } catch (err) {
+    const cached = readCache(key);
+    if (cached) {
+      lastData = cached.data;
+      lastLocKey = key;
+      renderResults(loc, cached.data, activeModels(), { fresh: false, timestamp: cached.timestamp });
+    } else {
+      resultArea.innerHTML = `<div class="card error">Nessuna connessione e nessun dato salvato per questa località.<br>` +
+        `Scaricala quando hai segnale (usa "📥 Scarica tutti i preferiti") per poterla consultare offline.` +
+        (location.protocol === "file:" ? `<br>Nota: se hai aperto il file con file://, alcuni browser bloccano comunque la rete anche con segnale presente.` : ``) + `</div>`;
+    }
+  }
+}
+
+async function downloadAllFavorites(silent) {
+  const statusEl = document.getElementById("downloadStatus");
+  if (favorites.length === 0) {
+    if (!silent) statusEl.textContent = "Nessun preferito da scaricare.";
+    return { ok: 0, fail: 0, total: 0 };
+  }
+  const modelParam = ALL_MODELS.map(m => m.id).join(",");
+  let ok = 0, fail = 0;
+  for (let i = 0; i < favorites.length; i++) {
+    const loc = favorites[i];
+    if (!silent) statusEl.textContent = `Scarico ${i + 1}/${favorites.length}: ${loc.name}...`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
+      `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,windgusts_10m_max,uv_index_max,snowfall_sum,weathercode` +
+      `&hourly=temperature_2m,precipitation,weathercode,relative_humidity_2m,surface_pressure,windspeed_10m,winddirection_10m,windgusts_10m,cloudcover` +
+      `&models=${modelParam}&timezone=auto&forecast_days=5`;
+    try {
+      const res = await fetch(url, { mode: "cors" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      saveCache(cacheKeyFor(loc), data);
+      maybeAppendHistory(loc, data);
+      ok++;
+    } catch (err) {
+      fail++;
+    }
+  }
+  const msg = `Fatto: ${ok} scaricati` + (fail > 0 ? `, ${fail} falliti (nessuna connessione?)` : "") + ".";
+  if (!silent) statusEl.textContent = msg;
+  return { ok, fail, total: favorites.length };
+}
+
+document.getElementById("downloadAllBtn").addEventListener("click", async () => {
+  const r = await downloadAllFavorites(false);
+  showToast(`Preferiti scaricati per uso offline: ${r.ok}/${r.total}`);
+});
+
+// --- Esporta/importa un vero file di backup (fuori dal localStorage del browser) ---
+function exportAllData() {
+  const payload = { exportedAt: Date.now(), version: 1, favoritesList: favorites, entries: {} };
+  favorites.forEach(f => {
+    const ck = cacheKeyFor(f);
+    const hk = historyKeyFor(f);
+    const cachedRaw = localStorage.getItem(ck);
+    const histRaw = localStorage.getItem(hk);
+    if (cachedRaw) { try { payload.entries[ck] = JSON.parse(cachedRaw); } catch (e) {} }
+    if (histRaw) { try { payload.entries[hk] = JSON.parse(histRaw); } catch (e) {} }
+  });
+  const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
+  a.href = url;
+  a.download = `meteo-alpi-backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("File di backup scaricato in Download");
+}
+
+function importAllData(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const payload = JSON.parse(e.target.result);
+      if (!payload.entries) throw new Error("formato non valido");
+      Object.keys(payload.entries).forEach(k => {
+        try { localStorage.setItem(k, JSON.stringify(payload.entries[k])); } catch (e2) {}
+      });
+      if (Array.isArray(payload.favoritesList)) {
+        payload.favoritesList.forEach(f => {
+          if (!favorites.some(ff => ff.name === f.name)) favorites.push(f);
+        });
+        saveFavorites();
+      }
+      showToast("Backup importato con successo");
+    } catch (err) {
+      showToast("File non valido o corrotto");
+    }
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById("exportBtn").addEventListener("click", exportAllData);
+document.getElementById("importFile").addEventListener("change", (e) => {
+  if (e.target.files && e.target.files[0]) importAllData(e.target.files[0]);
+  e.target.value = "";
+});
+
+// --- Auto-download quando torna la linea ---
+const AUTO_KEY = "meteoAlpiAutoDownload";
+const autoToggleEl = document.getElementById("autoDownloadToggle");
+autoToggleEl.checked = localStorage.getItem(AUTO_KEY) === "1";
+
+autoToggleEl.addEventListener("change", () => {
+  localStorage.setItem(AUTO_KEY, autoToggleEl.checked ? "1" : "0");
+  if (autoToggleEl.checked && "Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+  showToast(autoToggleEl.checked ? "Auto-scarico attivato" : "Auto-scarico disattivato");
+});
+
+function notifyUser(title, body) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    try { new Notification(title, { body }); } catch (e) { /* alcuni browser Android bloccano comunque */ }
+  }
+  showToast(body);
+}
+
+let autoDownloadInFlight = false;
+async function handleConnectionRestored() {
+  if (!autoToggleEl.checked || autoDownloadInFlight) return;
+  autoDownloadInFlight = true;
+  showToast("Connessione rilevata — scarico i preferiti...");
+  const r = await downloadAllFavorites(true);
+  autoDownloadInFlight = false;
+  if (r.total > 0) {
+    notifyUser("Meteo Alpi", `Dati aggiornati per ${r.ok}/${r.total} preferiti` + (r.fail > 0 ? ` (${r.fail} falliti)` : ""));
+  }
+  // Se la località aperta ora ha dati freschi in cache, aggiorna la vista
+  if (activeLoc) {
+    const key = cacheKeyFor(activeLoc);
+    const cached = readCache(key);
+    if (cached) {
+      lastData = cached.data;
+      lastLocKey = key;
+    }
+  }
+}
+
+const connStatusEl = document.getElementById("connStatus");
+function updateConnStatus() {
+  connStatusEl.textContent = navigator.onLine ? "🟢 Connesso" : "🔴 Nessuna connessione";
+}
+window.addEventListener("online", () => { updateConnStatus(); handleConnectionRestored(); });
+window.addEventListener("offline", updateConnStatus);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && navigator.onLine) handleConnectionRestored();
+});
+updateConnStatus();
+
+function weatherIcon(code) {
+  if (code === 0) return "☀️";
+  if ([1,2].includes(code)) return "🌤️";
+  if (code === 3) return "☁️";
+  if ([45,48].includes(code)) return "🌫️";
+  if ([51,53,55,56,57].includes(code)) return "🌦️";
+  if ([61,63,65,66,67,80,81,82].includes(code)) return "🌧️";
+  if ([71,73,75,77,85,86].includes(code)) return "❄️";
+  if ([95,96,99].includes(code)) return "⛈️";
+  return "❔";
+}
+
+function agreementBadge(values) {
+  const valid = values.filter(v => v !== null && v !== undefined && !isNaN(v));
+  if (valid.length < 2) return "";
+  const max = Math.max(...valid), min = Math.min(...valid);
+  const spread = max - min;
+  let cls = "agree-high", label = "concordi";
+  if (spread > 5) { cls = "agree-low"; label = "molto discordi"; }
+  else if (spread > 2) { cls = "agree-mid"; label = "parziale"; }
+  return `<span class="agree-badge ${cls}">${label} (±${spread.toFixed(1)}°)</span>`;
+}
+
+function officialLinks(loc) {
+  const region = (loc.region || "").toLowerCase();
+  const nameQ = encodeURIComponent(loc.name);
+  const links = [];
+
+  const arpaMap = [
+    { match: "piemonte", label: "ARPA Piemonte", url: "https://www.arpa.piemonte.it/rischi_naturali/snippets_arpa/meteo/index.html" },
+    { match: "valle d'aosta", label: "ARPA Valle d'Aosta", url: "https://www.arpa.vda.it/it/meteo-e-clima" },
+    { match: "lombardia", label: "ARPA Lombardia", url: "https://www.arpalombardia.it/previsioni-meteo/" },
+    { match: "trentino", label: "Meteotrentino", url: "https://www.meteotrentino.it" },
+    { match: "bolzano", label: "Meteo Alto Adige", url: "https://www.provincia.bz.it/meteo/" },
+    { match: "alto adige", label: "Meteo Alto Adige", url: "https://www.provincia.bz.it/meteo/" },
+    { match: "veneto", label: "ARPA Veneto", url: "https://www.arpa.veneto.it/bollettini/meteo/" },
+    { match: "friuli", label: "OSMER FVG", url: "https://www.osmer.fvg.it" }
+  ];
+  arpaMap.forEach(a => {
+    if (region.includes(a.match)) links.push({ label: a.label, url: a.url });
+  });
+
+  const isItaly = region.includes("italy") || region.includes("italia");
+  if (isItaly) {
+    links.push({ label: "Aeronautica Militare (Meteo AM)", url: "https://www.meteoam.it" });
+    links.push({ label: "AINEVA — Bollettino valanghe", url: "https://bollettini.aineva.it/bulletin/latest" });
+
+    const regionSlugs = {
+      "piemonte": "piemonte",
+      "valle d'aosta": "valle-d-aosta",
+      "lombardia": "lombardia",
+      "trentino": "trentino-alto-adige",
+      "alto adige": "trentino-alto-adige",
+      "bolzano": "trentino-alto-adige",
+      "veneto": "veneto",
+      "friuli": "friuli-venezia-giulia"
+    };
+    let slug = null;
+    Object.keys(regionSlugs).forEach(k => { if (region.includes(k)) slug = regionSlugs[k]; });
+    links.push({
+      label: slug ? "3BMeteo — Regione" : "3BMeteo",
+      url: slug ? `https://www.3bmeteo.com/meteo_regione-${slug}.htm` : "https://www.3bmeteo.com",
+      note: slug ? "livello regionale" : null
+    });
+    links.push({ label: "ilMeteo.it", url: "https://www.ilmeteo.it", note: "cerca la località dalla home" });
+    if (region.includes("piemonte")) {
+      links.push({ label: "Nimbus — Previsioni Piemonte", url: "https://www.nimbus.it/italiameteo/previpiemonte.htm" });
+    }
+  }
+  if (region.includes("france")) {
+    links.push({ label: "Météo-France", url: "https://meteofrance.com" });
+  }
+  if (region.includes("switzerland") || region.includes("svizzera")) {
+    links.push({ label: "MeteoSwiss", url: "https://www.meteoswiss.admin.ch" });
+  }
+  if (region.includes("austria")) {
+    links.push({ label: "GeoSphere Austria", url: "https://www.geosphere.at" });
+  }
+
+  // Fallback se non riconosciamo la regione
+  if (links.length === 0) {
+    links.push({ label: "Aeronautica Militare (Meteo AM)", url: "https://www.meteoam.it" });
+  }
+  return links;
+}
+
+const FASCE = [
+  { key: "notte", label: "Notte", start: 0, end: 6, icon: "🌙" },
+  { key: "mattina", label: "Mattina", start: 6, end: 12, icon: "🌅" },
+  { key: "pomeriggio", label: "Pomeriggio", start: 12, end: 18, icon: "🌇" },
+  { key: "sera", label: "Sera", start: 18, end: 24, icon: "🌃" }
+];
+
+const HOURLY_VARS = [
+  { key: "temp", label: "🌡️ Temperatura", field: "temperature_2m", unit: "°", agg: "avg" },
+  { key: "humidity", label: "💧 Umidità", field: "relative_humidity_2m", unit: "%", agg: "avg" },
+  { key: "pressure", label: "🌀 Pressione", field: "surface_pressure", unit: " hPa", agg: "avg" },
+  { key: "wind", label: "💨 Vento", field: "windspeed_10m", unit: " km/h", agg: "avg", dirField: "winddirection_10m" },
+  { key: "gust", label: "🌬️ Raffiche", field: "windgusts_10m", unit: " km/h", agg: "max" },
+  { key: "cloud", label: "☁️ Nuvolosità", field: "cloudcover", unit: "%", agg: "avg" },
+  { key: "precip", label: "🌧️ Pioggia", field: "precipitation", unit: " mm", agg: "sum" }
+];
+// Selezione predefinita: almeno 3 grandezze mostrate insieme fin da subito
+const DEFAULT_SELECTED_VARS = ["temp", "wind", "precip"];
+
+function windArrow(deg) {
+  if (deg === undefined || deg === null) return "";
+  const arrows = ["↓","↙","←","↖","↑","↗","→","↘"];
+  return arrows[Math.round(deg / 45) % 8];
+}
+
+function aggregate(values, agg) {
+  const valid = values.filter(v => v !== undefined && v !== null);
+  if (!valid.length) return null;
+  if (agg === "sum") return valid.reduce((a, b) => a + b, 0);
+  if (agg === "max") return Math.max(...valid);
+  return valid.reduce((a, b) => a + b, 0) / valid.length; // avg
+}
+
+function dailyHourlyAvg(hourly, field, date, modelId) {
+  const idxs = hourly.time
+    .map((t, i) => ({ t, i }))
+    .filter(o => o.t.startsWith(date))
+    .map(o => o.i);
+  const values = idxs.map(i => hourly[`${field}_${modelId}`]?.[i]);
+  return aggregate(values, "avg");
+}
+
+function localDateStr(d) {
+  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function isToday(dateStr) {
+  return dateStr === localDateStr(new Date());
+}
+function currentHour() {
+  return new Date().getHours();
+}
+
+function fasceForDay(hourly, dateStr, models, varDef) {
+  const todayNow = isToday(dateStr) ? currentHour() : null;
+  const dayIndices = hourly.time
+    .map((t, i) => ({ t, i }))
+    .filter(o => o.t.startsWith(dateStr));
+
+  const fasceToShow = todayNow === null ? FASCE : FASCE.filter(f => f.end > todayNow);
+
+  return fasceToShow.map(f => {
+    const idxs = dayIndices.filter(o => {
+      const hour = parseInt(o.t.split("T")[1].split(":")[0]);
+      const inRange = hour >= f.start && hour < f.end;
+      return inRange && (todayNow === null || hour >= todayNow);
+    }).map(o => o.i);
+
+    const perModel = models.map(m => {
+      const values = idxs.map(i => hourly[`${varDef.field}_${m.id}`]?.[i]);
+      const value = aggregate(values, varDef.agg);
+      let dir = null;
+      if (varDef.dirField) {
+        const dirs = idxs.map(i => hourly[`${varDef.dirField}_${m.id}`]?.[i]).filter(v => v !== undefined && v !== null);
+        if (dirs.length) dir = dirs[Math.floor(dirs.length / 2)]; // direzione "mediana" della fascia
+      }
+      const codes = idxs.map(i => hourly[`weathercode_${m.id}`]?.[i]).filter(v => v !== undefined && v !== null);
+      const maxCode = codes.length ? Math.max(...codes) : null;
+      return { modelId: m.id, value, dir, maxCode };
+    });
+
+    return { fascia: f, perModel };
+  });
+}
+
+function hourlyForDay(hourly, dateStr, models, varDef) {
+  const todayNow = isToday(dateStr) ? currentHour() : null;
+  const dayIndices = hourly.time
+    .map((t, i) => ({ t, i }))
+    .filter(o => o.t.startsWith(dateStr))
+    .filter(o => {
+      if (todayNow === null) return true;
+      const hour = parseInt(o.t.split("T")[1].split(":")[0]);
+      return hour >= todayNow;
+    });
+
+  return dayIndices.map(({ t, i }) => {
+    const hour = t.split("T")[1];
+    const perModel = models.map(m => ({
+      modelId: m.id,
+      value: hourly[`${varDef.field}_${m.id}`]?.[i],
+      dir: varDef.dirField ? hourly[`${varDef.dirField}_${m.id}`]?.[i] : null,
+      code: hourly[`weathercode_${m.id}`]?.[i]
+    }));
+    return { hour, iso: t, perModel };
+  });
+}
+
+const FULL_FIELDS = [
+  { key: "temp", label: "Temperatura", field: "temperature_2m", unit: "°C", decimals: 1, agg: "avg" },
+  { key: "humidity", label: "Umidità", field: "relative_humidity_2m", unit: "%", decimals: 0, agg: "avg" },
+  { key: "pressure", label: "Pressione", field: "surface_pressure", unit: " hPa", decimals: 0, agg: "avg" },
+  { key: "wind", label: "Vento", field: "windspeed_10m", unit: " km/h", decimals: 0, agg: "avg", dirField: "winddirection_10m" },
+  { key: "gust", label: "Raffiche", field: "windgusts_10m", unit: " km/h", decimals: 0, agg: "max" },
+  { key: "cloud", label: "Nuvolosità", field: "cloudcover", unit: "%", decimals: 0, agg: "avg" },
+  { key: "precip", label: "Pioggia", field: "precipitation", unit: " mm", decimals: 1, agg: "sum" }
+];
+
+function fullStatsAtIndex(hourly, idx, modelId) {
+  const stats = {};
+  FULL_FIELDS.forEach(f => {
+    stats[f.key] = hourly[`${f.field}_${modelId}`]?.[idx];
+    if (f.dirField) stats[f.key + "_dir"] = hourly[`${f.dirField}_${modelId}`]?.[idx];
+  });
+  stats.code = hourly[`weathercode_${modelId}`]?.[idx];
+  return stats;
+}
+
+function fullStatsOverIndexes(hourly, idxs, modelId) {
+  const stats = {};
+  FULL_FIELDS.forEach(f => {
+    const values = idxs.map(i => hourly[`${f.field}_${modelId}`]?.[i]);
+    stats[f.key] = aggregate(values, f.agg);
+    if (f.dirField) {
+      const dirs = idxs.map(i => hourly[`${f.dirField}_${modelId}`]?.[i]).filter(v => v !== undefined && v !== null);
+      stats[f.key + "_dir"] = dirs.length ? dirs[Math.floor(dirs.length / 2)] : null;
+    }
+  });
+  const codes = idxs.map(i => hourly[`weathercode_${modelId}`]?.[i]).filter(v => v !== undefined && v !== null);
+  stats.code = codes.length ? Math.max(...codes) : null;
+  return stats;
+}
+
+function renderFullStatsHtml(title, modelLabel, stats, isAverage) {
+  let h = `<div class="cell-detail-card">
+    <div class="row" style="justify-content:space-between;align-items:center;">
+      <strong>${modelLabel} — ${title}</strong>
+      <span class="rm" style="cursor:pointer;" data-close-detail="1">✕</span>
+    </div>
+    ${isAverage ? '<div style="color:var(--muted);font-size:0.7rem;margin-top:2px;">Media/aggregato della fascia oraria</div>' : ''}
+    <div class="detail-grid">`;
+  h += `<div>${weatherIcon(stats.code)}</div>`;
+  FULL_FIELDS.forEach(f => {
+    const v = stats[f.key];
+    if (v === undefined || v === null) {
+      h += `<div><span class="opt-desc">${f.label}</span><br>—</div>`;
+    } else {
+      const dir = f.dirField && stats[f.key + "_dir"] !== null && stats[f.key + "_dir"] !== undefined ? " " + windArrow(stats[f.key + "_dir"]) : "";
+      h += `<div><span class="opt-desc">${f.label}</span><br>${v.toFixed(f.decimals)}${f.unit}${dir}</div>`;
+    }
+  });
+  h += `</div></div>`;
+  return h;
+}
+
+function renderResults(loc, data, models, meta) {
+  meta = meta || {};
+  const daily = data.daily;
+  const dates = daily.time;
+  const isFav = isFavorite(loc);
+  const hist = readHistory(historyKeyFor(loc));
+  let currentDayIdx = 0;
+
+  let bannerHtml = "";
+  if (meta.historical) {
+    bannerHtml = `<div class="offline-banner" style="border-color:var(--accent2);color:var(--accent2);background:var(--panel2);">
+      <span>🕓 Salvataggio storico del ${formatTimestamp(meta.timestamp)}</span>
+      <button id="backToCurrentBtn">↩️ Attuale</button>
+    </div>`;
+  } else if (meta.fresh === false) {
+    bannerHtml = `<div class="offline-banner">
+      <span>📡 Offline — dati salvati il ${formatTimestamp(meta.timestamp)}</span>
+      <button id="retryFetchBtn">🔄 Riprova</button>
+    </div>`;
+  } else if (meta.fresh === true) {
+    bannerHtml = `<div class="loc-meta" style="margin-bottom:6px;">✓ Dati aggiornati adesso · salvati per uso offline</div>`;
+  }
+
+  let historyHtml = "";
+  if (hist.length > 0) {
+    historyHtml = `<div class="section-label" style="margin-top:12px;">🕓 Confronta con salvataggi precedenti</div>
+    <div class="fav-list">
+      <div class="fav-chip${!meta.historical ? " active" : ""}" data-hist="current">Attuale</div>
+      ${hist.map((h, i) => `<div class="fav-chip${meta.historical && meta.timestamp === h.timestamp ? " active" : ""}" data-hist="${i}">${formatTimestamp(h.timestamp)}</div>`).join("")}
+    </div>`;
+  }
+
+  // Etichetta di concordanza per il pallino colorato su ogni tab (usa la temp. massima)
+  function agreementDotColor(di) {
+    const values = models.map(m => daily[`temperature_2m_max_${m.id}`]?.[di]).filter(v => v !== null && v !== undefined);
+    if (values.length < 2) return "transparent";
+    const spread = Math.max(...values) - Math.min(...values);
+    if (spread > 5) return "var(--bad)";
+    if (spread > 2) return "var(--warn)";
+    return "var(--good)";
+  }
+
+  const dayTabsHtml = `<div class="day-tabs" id="dayTabs">
+    ${dates.map((date, di) => {
+      const d = new Date(date);
+      const dName = d.toLocaleDateString("it-IT", { weekday: "short" });
+      const dNum = d.toLocaleDateString("it-IT", { day: "numeric", month: "short" });
+      return `<div class="day-tab${di === 0 ? " active" : ""}" data-idx="${di}">
+        <div class="dt-name">${dName}</div>
+        <div class="dt-num">${dNum}</div>
+        <div class="dt-dot" style="background:${agreementDotColor(di)};"></div>
+      </div>`;
+    }).join("")}
+  </div>`;
+
+  let html = bannerHtml + `<div class="card">
+    <div class="loc-title">${esc(loc.name)}</div>
+    <div class="loc-meta">${esc(loc.region || "")} ${loc.elevation ? " · " + Math.round(loc.elevation) + " m" : ""} · lat ${loc.lat.toFixed(3)}, lon ${loc.lon.toFixed(3)}</div>
+    ${!isFav ? '<div class="row" style="margin-top:8px;"><button class="secondary" id="favToggle">☆ Aggiungi ai preferiti</button></div>' : '<div class="loc-meta" style="margin-top:8px;">★ Già nei preferiti</div>'}
+    ${historyHtml}
+    <details style="margin-top:10px;">
+      <summary style="cursor:pointer;font-size:0.8rem;color:var(--muted);">Bollettini ufficiali per questa zona</summary>
+      <div class="link-list" style="margin-top:8px;">
+        ${officialLinks(loc).map(l => `<a class="link-item" href="${l.url}" target="_blank" rel="noopener"><span>${l.label}${l.note ? ' <span style="color:var(--muted);font-size:0.7rem;">(' + l.note + ')</span>' : ''}</span><span class="go">Apri →</span></a>`).join("")}
+      </div>
+    </details>
+  </div>
+  <div class="card">
+    ${dayTabsHtml}
+    <div id="dayDetailArea" style="margin-top:12px;"></div>
+  </div>
+  <div class="card">
+    <div class="section-label">🤖 Parere AI</div>
+    <div class="note" style="margin-top:0;padding-top:0;border-top:none;">Tre modi di leggere gli stessi dati già scaricati: un commento sul giorno che stai guardando, l'andamento nelle prossime 24 ore, o la tendenza nei prossimi giorni.</div>
+    <div class="row" style="margin-top:8px;">
+      <button class="secondary" id="aiCommentBtn" style="width:100%;">💬 Commento sulle previsioni</button>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <button class="secondary" id="ai24hBtn" style="width:100%;">🕐 Andamento nelle prossime 24 ore</button>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <button class="secondary" id="aiTrendBtn" style="width:100%;">📈 Andamento nei prossimi giorni</button>
+    </div>
+    <div id="aiUnifiedResult" style="margin-top:10px;"></div>
+  </div>`;
+
+  resultArea.innerHTML = html;
+
+  document.getElementById("aiCommentBtn").addEventListener("click", () => {
+    askAi(loc, data, models, currentDayIdx, document.getElementById("aiUnifiedResult"));
+  });
+  document.getElementById("ai24hBtn").addEventListener("click", () => {
+    askAi24h(loc, data, models, document.getElementById("aiUnifiedResult"));
+  });
+  document.getElementById("aiTrendBtn").addEventListener("click", () => {
+    askAiTrend(loc, data, models, document.getElementById("aiUnifiedResult"));
+  });
+
+  function buildDayCardHtml(date, di) {
+    const d = new Date(date);
+    const dayName = d.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "short" });
+
+    let maxTemps = [], minTemps = [], precs = [], winds = [], codes = [], gusts = [], snows = [], uvs = [], humids = [], pressures = [], clouds = [];
+    models.forEach(m => {
+      maxTemps.push(daily[`temperature_2m_max_${m.id}`]?.[di]);
+      minTemps.push(daily[`temperature_2m_min_${m.id}`]?.[di]);
+      precs.push(daily[`precipitation_sum_${m.id}`]?.[di]);
+      winds.push(daily[`windspeed_10m_max_${m.id}`]?.[di]);
+      codes.push(daily[`weathercode_${m.id}`]?.[di]);
+      gusts.push(daily[`windgusts_10m_max_${m.id}`]?.[di]);
+      snows.push(daily[`snowfall_sum_${m.id}`]?.[di]);
+      uvs.push(daily[`uv_index_max_${m.id}`]?.[di]);
+      // Umidità, pressione e nuvolosità non sono forniti come aggregato giornaliero
+      // dall'API: li calcoliamo noi come media sulle ore di quel giorno.
+      humids.push(dailyHourlyAvg(data.hourly, "relative_humidity_2m", date, m.id));
+      pressures.push(dailyHourlyAvg(data.hourly, "surface_pressure", date, m.id));
+      clouds.push(dailyHourlyAvg(data.hourly, "cloudcover", date, m.id));
+    });
+
+    let h = `
+      <div class="row" style="justify-content:space-between;align-items:center;">
+        <span style="text-transform:capitalize;font-weight:600;">${dayName}</span>
+        ${agreementBadge(maxTemps)}
+      </div>
+      <div class="day-scroll"><table>
+        <tr><th style="text-align:left;">Modello</th><th>Meteo</th><th>Max</th><th>Min</th><th>Pioggia</th><th>Neve</th><th>Vento</th><th>Raffiche</th><th>UV</th><th>Umidità</th><th>Pressione</th><th>Nuvole</th></tr>`;
+
+    models.forEach((m, i) => {
+      const max = maxTemps[i], min = minTemps[i], prec = precs[i], wind = winds[i], code = codes[i];
+      const gust = gusts[i], snow = snows[i], uv = uvs[i];
+      const humid = humids[i], pressure = pressures[i], cloud = clouds[i];
+      h += `<tr>
+        <td class="model-name">${m.label}</td>
+        <td>${code !== undefined ? weatherIcon(code) : "—"}</td>
+        <td>${max !== undefined && max !== null ? max.toFixed(1) + "°" : "—"}</td>
+        <td>${min !== undefined && min !== null ? min.toFixed(1) + "°" : "—"}</td>
+        <td>${prec !== undefined && prec !== null ? prec.toFixed(1) + " mm" : "—"}</td>
+        <td>${snow !== undefined && snow !== null && snow > 0 ? snow.toFixed(1) + " cm" : "—"}</td>
+        <td>${wind !== undefined && wind !== null ? Math.round(wind) + " km/h" : "—"}</td>
+        <td>${gust !== undefined && gust !== null ? Math.round(gust) + " km/h" : "—"}</td>
+        <td>${uv !== undefined && uv !== null ? uv.toFixed(1) : "—"}</td>
+        <td>${humid !== null && humid !== undefined ? Math.round(humid) + "%" : "—"}</td>
+        <td>${pressure !== null && pressure !== undefined ? Math.round(pressure) + " hPa" : "—"}</td>
+        <td>${cloud !== null && cloud !== undefined ? Math.round(cloud) + "%" : "—"}</td>
+      </tr>`;
+    });
+
+    h += `</table></div>
+      <div class="row" style="margin-top:10px;">
+        <select class="detail-select" data-date="${date}" style="flex:1;background:var(--panel2);color:var(--text);border:1px solid var(--border);padding:8px;border-radius:10px;font-size:0.82rem;">
+          <option value="none">🕒 Giornata</option>
+          <option value="fasce">Fasce (notte/mattina/pomeriggio/sera)</option>
+          <option value="hourly" selected>Ora per ora</option>
+        </select>
+      </div>
+      <div class="section-label" style="margin-top:10px;">Grandezze da mostrare insieme (min. 1)</div>
+      <div class="var-chips" data-date="${date}">
+        ${HOURLY_VARS.map(v => `<span class="fav-chip var-chip${DEFAULT_SELECTED_VARS.includes(v.key) ? " active" : ""}" data-key="${v.key}">${v.label}</span>`).join("")}
+      </div>
+      <div class="fasce-panel" id="fasce-${date}" style="display:none;margin-top:8px;">
+        <div class="cell-detail-slot" id="cellDetail-${date}"></div>
+      </div>`;
+    return h;
+  }
+
+  function getSelectedVars(date) {
+    const chips = document.querySelectorAll(`.var-chips[data-date="${date}"] .var-chip.active`);
+    const keys = Array.from(chips).map(c => c.dataset.key);
+    const selected = HOURLY_VARS.filter(v => keys.includes(v.key));
+    return selected.length ? selected : [HOURLY_VARS[0]];
+  }
+
+  function renderDetailPanel(date) {
+    const detailSel = document.querySelector(`.detail-select[data-date="${date}"]`);
+    const panel = document.getElementById(`fasce-${date}`);
+    if (!detailSel || !panel) return;
+    if (detailSel.value === "none") {
+      panel.style.display = "none";
+      return;
+    }
+    panel.style.display = "block";
+    const varDefs = getSelectedVars(date);
+    const detailSlot = `<div class="cell-detail-slot" id="cellDetail-${date}"></div>`;
+    if (detailSel.value === "fasce") {
+      const dataPerVar = varDefs.map(vd => fasceForDay(data.hourly, date, models, vd));
+      panel.innerHTML = detailSlot + renderFasceTable(dataPerVar, models, varDefs);
+      attachFasceClicks(date, panel);
+    } else if (detailSel.value === "hourly") {
+      const dataPerVar = varDefs.map(vd => hourlyForDay(data.hourly, date, models, vd));
+      panel.innerHTML = detailSlot + renderHourlyTable(dataPerVar, models, varDefs);
+      attachHourlyClicks(date, panel);
+    }
+  }
+
+  function bindDetailClose(container, date) {
+    const closeBtn = container.querySelector("[data-close-detail]");
+    if (closeBtn) closeBtn.addEventListener("click", () => {
+      document.getElementById(`cellDetail-${date}`).innerHTML = "";
+    });
+  }
+
+  function attachHourlyClicks(date, panel) {
+    panel.querySelectorAll("td[data-iso][data-model]").forEach(td => {
+      td.addEventListener("click", () => {
+        const iso = td.dataset.iso;
+        const modelId = td.dataset.model;
+        const m = models.find(mm => mm.id === modelId);
+        const idx = data.hourly.time.indexOf(iso);
+        if (idx === -1 || !m) return;
+        const stats = fullStatsAtIndex(data.hourly, idx, modelId);
+        const dt = new Date(iso);
+        const timeLabel = dt.toLocaleString("it-IT", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+        const slot = document.getElementById(`cellDetail-${date}`);
+        slot.innerHTML = renderFullStatsHtml(timeLabel, m.label, stats, false);
+        bindDetailClose(slot, date);
+      });
+    });
+  }
+
+  function attachFasceClicks(date, panel) {
+    panel.querySelectorAll("td[data-fascia][data-model]").forEach(td => {
+      td.addEventListener("click", () => {
+        const fasciaKey = td.dataset.fascia;
+        const modelId = td.dataset.model;
+        const m = models.find(mm => mm.id === modelId);
+        const f = FASCE.find(ff => ff.key === fasciaKey);
+        if (!f || !m) return;
+        const todayNow = isToday(date) ? currentHour() : null;
+        const idxs = data.hourly.time
+          .map((t, i) => ({ t, i }))
+          .filter(o => o.t.startsWith(date))
+          .filter(o => {
+            const hour = parseInt(o.t.split("T")[1].split(":")[0]);
+            const inRange = hour >= f.start && hour < f.end;
+            return inRange && (todayNow === null || hour >= todayNow);
+          }).map(o => o.i);
+        const stats = fullStatsOverIndexes(data.hourly, idxs, modelId);
+        const slot = document.getElementById(`cellDetail-${date}`);
+        slot.innerHTML = renderFullStatsHtml(`${f.icon} ${f.label}`, m.label, stats, true);
+        bindDetailClose(slot, date);
+      });
+    });
+  }
+
+  function selectDay(idx) {
+    currentDayIdx = idx;
+    const date = dates[idx];
+    document.querySelectorAll(".day-tab").forEach(t => t.classList.toggle("active", parseInt(t.dataset.idx) === idx));
+    const area = document.getElementById("dayDetailArea");
+    area.innerHTML = buildDayCardHtml(date, idx);
+
+    const detailSel = area.querySelector(".detail-select");
+    detailSel.addEventListener("change", () => renderDetailPanel(date));
+
+    area.querySelectorAll(".var-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        const chipsInGroup = area.querySelectorAll(`.var-chips[data-date="${date}"] .var-chip`);
+        const activeCount = Array.from(chipsInGroup).filter(c => c.classList.contains("active")).length;
+        if (chip.classList.contains("active") && activeCount <= 1) {
+          showToast("Serve almeno una grandezza selezionata");
+          return;
+        }
+        chip.classList.toggle("active");
+        renderDetailPanel(date);
+      });
+    });
+
+    renderDetailPanel(date);
+  }
+
+  document.querySelectorAll(".day-tab").forEach(tab => {
+    tab.addEventListener("click", () => selectDay(parseInt(tab.dataset.idx)));
+  });
+  selectDay(0);
+
+  const favToggle = document.getElementById("favToggle");
+  if (favToggle) favToggle.addEventListener("click", () => {
+    toggleFavorite(loc);
+    renderResults(loc, data, models, meta);
+  });
+  const retryBtn = document.getElementById("retryFetchBtn");
+  if (retryBtn) retryBtn.addEventListener("click", () => loadLocation(loc, true));
+  const backBtn = document.getElementById("backToCurrentBtn");
+  if (backBtn) backBtn.addEventListener("click", () => loadLocation(loc));
+
+  document.querySelectorAll("[data-hist]").forEach(chip => {
+    chip.addEventListener("click", () => {
+      const val = chip.dataset.hist;
+      if (val === "current") {
+        loadLocation(loc);
+      } else {
+        const entry = hist[parseInt(val)];
+        if (entry) renderResults(loc, entry.data, models, { fresh: null, timestamp: entry.timestamp, historical: true });
+      }
+    });
+  });
+}
+
+function renderFasceTable(fasceDataPerVar, models, varDefs) {
+  const fasceData = fasceDataPerVar[0]; // usato solo per le intestazioni (fasce sono uguali per ogni var)
+  let h = `<div class="day-scroll"><table>
+    <tr><th style="text-align:left;">Modello</th>`;
+  fasceData.forEach(fd => { h += `<th>${fd.fascia.icon} ${fd.fascia.label}</th>`; });
+  h += `</tr>`;
+
+  models.forEach(m => {
+    h += `<tr><td class="model-name">${m.label}</td>`;
+    fasceData.forEach((fd, fi) => {
+      h += `<td data-fascia="${fd.fascia.key}" data-model="${m.id}" class="clickable-cell">`;
+      const lines = [];
+      varDefs.forEach((varDef, vi) => {
+        const pm = fasceDataPerVar[vi][fi].perModel.find(p => p.modelId === m.id);
+        if (!pm || pm.value === null || pm.value === undefined) {
+          lines.push("—");
+        } else {
+          const icon = varDef.key === "temp" && pm.maxCode !== null ? weatherIcon(pm.maxCode) + " " : "";
+          const dir = pm.dir !== null && pm.dir !== undefined ? " " + windArrow(pm.dir) : "";
+          const decimals = (varDef.key === "pressure" || varDef.key === "gust" || varDef.key === "wind") ? 0 : 1;
+          lines.push(`${icon}${pm.value.toFixed(decimals)}${varDef.unit}${dir}`);
+        }
+      });
+      h += lines.join("<br>");
+      h += `</td>`;
+    });
+    h += `</tr>`;
+  });
+
+  h += `</table></div>`;
+  return h;
+}
+
+function renderHourlyTable(hourlyDataPerVar, models, varDefs) {
+  const hourlyData = hourlyDataPerVar[0]; // usato solo per le intestazioni orarie (uguali per ogni var)
+  let h = `<div class="day-scroll"><table>
+    <tr><th style="text-align:left;">Modello</th>`;
+  hourlyData.forEach(hd => { h += `<th>${hd.hour}</th>`; });
+  h += `</tr>`;
+
+  models.forEach(m => {
+    h += `<tr><td class="model-name">${m.label}</td>`;
+    hourlyData.forEach((hd, hi) => {
+      h += `<td data-iso="${hd.iso}" data-model="${m.id}" class="clickable-cell">`;
+      const lines = [];
+      varDefs.forEach((varDef, vi) => {
+        const pm = hourlyDataPerVar[vi][hi].perModel.find(p => p.modelId === m.id);
+        if (!pm || pm.value === undefined || pm.value === null) {
+          lines.push("—");
+        } else {
+          const icon = varDef.key === "temp" && pm.code !== undefined && pm.code !== null ? weatherIcon(pm.code) + " " : "";
+          const dir = pm.dir !== null && pm.dir !== undefined ? " " + windArrow(pm.dir) : "";
+          const decimals = (varDef.key === "pressure" || varDef.key === "gust" || varDef.key === "wind") ? 0 : 1;
+          lines.push(`${icon}${pm.value.toFixed(decimals)}${varDef.unit}${dir}`);
+        }
+      });
+      h += lines.join("<br>");
+      h += `</td>`;
+    });
+    h += `</tr>`;
+  });
+
+  h += `</table></div>`;
+  return h;
+}
+
+renderModelGrid();
+renderFavorites();
+
+// --- Temi / skin colore ---
+const THEMES = {
+  notte:    { bg:"#0f1a22", bg2:"#0a1319", panel:"#16232d", panel2:"#1e2f3b", border:"#2b4152", text:"#e8f0f4", muted:"#8fa5b3", accent:"#4fb3c9", accent2:"#e0a458", good:"#6ec98f", warn:"#e0a458", bad:"#e07458", "accent-bg":"#1c3540", "good-bg":"#173320", "warn-bg":"#33280f", "bad-bg":"#331610" },
+  giorno:   { bg:"#f4f7f9", bg2:"#e2e9ed", panel:"#ffffff", panel2:"#eef2f5", border:"#d3dbe0", text:"#1c2b33", muted:"#5b6b73", accent:"#0f7fa3", accent2:"#b56a24", good:"#2f8f57", warn:"#b56a24", bad:"#c94f36", "accent-bg":"#d8eef7", "good-bg":"#e1f3e6", "warn-bg":"#faeed7", "bad-bg":"#fbe0dc" },
+  ghiaccio: { bg:"#eef6fb", bg2:"#dceefa", panel:"#ffffff", panel2:"#e3f1fa", border:"#c3dced", text:"#173247", muted:"#5c7891", accent:"#2596d1", accent2:"#8a6fd1", good:"#2f9e6e", warn:"#c98a1f", bad:"#c9503f", "accent-bg":"#d3ecfa", "good-bg":"#dff3ea", "warn-bg":"#fbedd2", "bad-bg":"#fadedb" },
+  tramonto: { bg:"#241521", bg2:"#180d16", panel:"#33202e", panel2:"#402a39", border:"#5a3a4c", text:"#f6e9ee", muted:"#c39aab", accent:"#e0894f", accent2:"#c9587a", good:"#7cbf7a", warn:"#e0894f", bad:"#d1554a", "accent-bg":"#4a2f3d", "good-bg":"#1f3a24", "warn-bg":"#4a2f16", "bad-bg":"#3d1f1f" }
+};
+const THEME_KEY = "meteoAlpiTheme";
+
+function applyTheme(name) {
+  const t = THEMES[name] || THEMES.notte;
+  const root = document.documentElement.style;
+  Object.keys(t).forEach(k => root.setProperty(`--${k}`, t[k]));
+  localStorage.setItem(THEME_KEY, name);
+}
+
+const themeSelectEl = document.getElementById("themeSelect");
+const savedTheme = localStorage.getItem(THEME_KEY) || "notte";
+themeSelectEl.value = savedTheme;
+applyTheme(savedTheme);
+themeSelectEl.addEventListener("change", () => {
+  applyTheme(themeSelectEl.value);
+  showToast("Tema aggiornato");
+});
+
+// --- Layout (Auto / Smartphone / Tablet / Computer / Minimal) ---
+const LAYOUT_KEY = "meteoAlpiLayout";
+const layoutSelectEl = document.getElementById("layoutSelect");
+
+function applyLayout(mode) {
+  document.body.classList.remove("layout-auto", "layout-smartphone", "layout-tablet", "layout-computer", "layout-minimal");
+  document.body.classList.add(`layout-${mode}`);
+  localStorage.setItem(LAYOUT_KEY, mode);
+}
+
+const savedLayout = localStorage.getItem(LAYOUT_KEY) || "auto";
+layoutSelectEl.value = savedLayout;
+applyLayout(savedLayout);
+layoutSelectEl.addEventListener("change", () => {
+  applyLayout(layoutSelectEl.value);
+  showToast("Layout aggiornato");
+});
+
+// --- Parere AI opzionale (usa i dati già scaricati, non chiede il meteo "a memoria") ---
+const AI_KEY = "meteoAlpiAiConfig";
+const aiBaseUrlEl = document.getElementById("aiBaseUrl");
+const aiModelEl = document.getElementById("aiModel");
+const aiApiKeyEl = document.getElementById("aiApiKey");
+const aiPresetEl = document.getElementById("aiProviderPreset");
+
+const AI_PRESETS = {
+  llm7: { baseUrl: "https://api.llm7.io/v1/chat/completions", model: "fast", noKeyNeeded: true },
+  groq20: { baseUrl: "https://api.groq.com/openai/v1/chat/completions", model: "openai/gpt-oss-20b" },
+  groq120: { baseUrl: "https://api.groq.com/openai/v1/chat/completions", model: "openai/gpt-oss-120b" },
+  gemini: { baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", model: "gemini-flash-latest" },
+  openrouter: { baseUrl: "https://openrouter.ai/api/v1/chat/completions", model: "openrouter/free" },
+  cerebras: { baseUrl: "https://api.cerebras.ai/v1/chat/completions", model: "llama-3.3-70b" },
+  pollinations: { baseUrl: "https://text.pollinations.ai/openai", model: "openai", noKeyNeeded: true }
+};
+aiPresetEl.addEventListener("change", () => {
+  const preset = AI_PRESETS[aiPresetEl.value];
+  if (preset) {
+    aiBaseUrlEl.value = preset.baseUrl;
+    aiModelEl.value = preset.model;
+    if (preset.noKeyNeeded) {
+      aiApiKeyEl.value = "";
+      aiApiKeyEl.placeholder = "Non serve alcuna chiave per questo servizio";
+      aiApiKeyEl.disabled = true;
+    } else {
+      aiApiKeyEl.disabled = false;
+      aiApiKeyEl.placeholder = "Chiave API (es. gsk_...)";
+    }
+  }
+});
+
+function loadAiConfig() {
+  try {
+    return JSON.parse(localStorage.getItem(AI_KEY) || "null");
+  } catch (e) { return null; }
+}
+function saveAiConfigFromInputs() {
+  const cfg = { baseUrl: aiBaseUrlEl.value.trim(), model: aiModelEl.value.trim(), apiKey: aiApiKeyEl.value.trim() };
+  localStorage.setItem(AI_KEY, JSON.stringify(cfg));
+  return cfg;
+}
+(function initAiInputs() {
+  const cfg = loadAiConfig();
+  if (cfg) {
+    aiBaseUrlEl.value = cfg.baseUrl || "";
+    aiModelEl.value = cfg.model || "";
+    aiApiKeyEl.value = cfg.apiKey || "";
+    const matchPreset = Object.keys(AI_PRESETS).find(k => AI_PRESETS[k].baseUrl === cfg.baseUrl && AI_PRESETS[k].model === cfg.model);
+    aiPresetEl.value = matchPreset || "custom";
+    if (matchPreset && AI_PRESETS[matchPreset].noKeyNeeded) {
+      aiApiKeyEl.disabled = true;
+      aiApiKeyEl.placeholder = "Non serve alcuna chiave per questo servizio";
+    }
+  }
+  // Nessuna configurazione viene scelta o salvata in automatico: la persona
+  // deve selezionare un provider e incollare la propria chiave almeno una volta.
+})();
+document.getElementById("aiSaveBtn").addEventListener("click", () => {
+  saveAiConfigFromInputs();
+  document.getElementById("aiSaveStatus").textContent = "Configurazione AI salvata su questo dispositivo.";
+  showToast("Configurazione AI salvata");
+});
+
+function buildAiPrompt(loc, data, models, dateIdx) {
+  const daily = data.daily;
+  const date = daily.time[dateIdx];
+  let lines = [`Previsioni per ${loc.name} (${date}), confronto tra modelli meteorologici:`];
+  models.forEach(m => {
+    const max = daily[`temperature_2m_max_${m.id}`]?.[dateIdx];
+    const min = daily[`temperature_2m_min_${m.id}`]?.[dateIdx];
+    const prec = daily[`precipitation_sum_${m.id}`]?.[dateIdx];
+    const wind = daily[`windspeed_10m_max_${m.id}`]?.[dateIdx];
+    const gust = daily[`windgusts_10m_max_${m.id}`]?.[dateIdx];
+    const snow = daily[`snowfall_sum_${m.id}`]?.[dateIdx];
+    lines.push(`- ${m.label}: max ${max}°C, min ${min}°C, pioggia ${prec}mm, neve ${snow}cm, vento ${wind}km/h, raffiche ${gust}km/h`);
+  });
+  lines.push("Sulla base SOLO di questi dati (non aggiungere altre informazioni meteo), scrivi un parere in italiano semplice, di almeno 5-6 frasi complete, per chi deve decidere se fare un'escursione in montagna: descrivi la tendenza generale, evidenzia i punti di disaccordo tra i modelli se rilevanti, ed eventuali rischi (vento, neve, temporali). Concludi sempre la risposta con una frase di sintesi finale, non interromperti a metà.");
+  return lines.join("\n");
+}
+
+function buildAi24hPrompt(loc, data, models) {
+  const hourly = data.hourly;
+  const now = new Date();
+  const nowStr = `${localDateStr(now)}T${String(now.getHours()).padStart(2, "0")}:00`;
+  let startIdx = hourly.time.indexOf(nowStr);
+  if (startIdx === -1) startIdx = hourly.time.findIndex(t => t >= nowStr);
+  if (startIdx === -1) startIdx = 0;
+  const endIdx = Math.min(startIdx + 24, hourly.time.length);
+  const avg = arr => { const v = arr.filter(x => x !== undefined && x !== null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  let lines = [`Dati meteo orari medi tra i modelli per ${loc.name}, prossime 24 ore:`];
+  for (let i = startIdx; i < endIdx; i += 3) {
+    const t = hourly.time[i];
+    const hourLabel = t.split("T")[1];
+    const tempAvg = avg(models.map(m => hourly[`temperature_2m_${m.id}`]?.[i]));
+    const precAvg = avg(models.map(m => hourly[`precipitation_${m.id}`]?.[i]));
+    const windAvg = avg(models.map(m => hourly[`windspeed_10m_${m.id}`]?.[i]));
+    lines.push(`- ${hourLabel}: ~${tempAvg !== null ? tempAvg.toFixed(0) : "?"}°C, pioggia ~${precAvg !== null ? precAvg.toFixed(1) : "?"}mm, vento ~${windAvg !== null ? windAvg.toFixed(0) : "?"}km/h`);
+  }
+  lines.push("Sulla base SOLO di questi dati, descrivi in italiano semplice come evolve il tempo nelle prossime 24 ore: se migliora o peggiora, se arriva pioggia o vento più forte e in quale fascia oraria all'incirca. NON dare numeri precisi: solo l'andamento generale, in 3-4 frasi. Concludi con una frase di sintesi.");
+  return lines.join("\n");
+}
+
+function buildAiTrendPrompt(loc, data, models) {
+  const daily = data.daily;
+  const dates = daily.time;
+  const avg = arr => { const v = arr.filter(x => x !== undefined && x !== null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  let lines = [`Dati meteo medi tra i modelli per ${loc.name}, prossimi ${dates.length} giorni:`];
+  dates.forEach((date, di) => {
+    const maxAvg = avg(models.map(m => daily[`temperature_2m_max_${m.id}`]?.[di]));
+    const minAvg = avg(models.map(m => daily[`temperature_2m_min_${m.id}`]?.[di]));
+    const precAvg = avg(models.map(m => daily[`precipitation_sum_${m.id}`]?.[di]));
+    const windAvg = avg(models.map(m => daily[`windspeed_10m_max_${m.id}`]?.[di]));
+    lines.push(`- ${date}: max ~${maxAvg !== null ? maxAvg.toFixed(0) : "?"}°C, min ~${minAvg !== null ? minAvg.toFixed(0) : "?"}°C, pioggia media ~${precAvg !== null ? precAvg.toFixed(1) : "?"}mm, vento medio ~${windAvg !== null ? windAvg.toFixed(0) : "?"}km/h`);
+  });
+  lines.push("Sulla base SOLO di questi dati, descrivi in italiano semplice l'andamento generale nei prossimi giorni: se le temperature tendono a salire o scendere, se il tempo migliora o peggiora, se sono previsti giorni instabili o più stabili. NON dare numeri precisi né una previsione dettagliata giorno per giorno: solo la tendenza generale, in 4-5 frasi. I dati dei giorni più lontani sono meno affidabili di quelli dei primi giorni: trattali con più cautela nella descrizione. Concludi con una frase di sintesi, non interromperti a metà.");
+  return lines.join("\n");
+}
+
+async function callAiApi(prompt, targetEl, titleHtml) {
+  const cfg = loadAiConfig();
+  const noKeyOk = cfg && cfg.baseUrl && (cfg.baseUrl.includes("pollinations.ai") || cfg.baseUrl.includes("llm7.io"));
+  if (!cfg || !cfg.baseUrl || !cfg.model || (!cfg.apiKey && !noKeyOk)) {
+    targetEl.innerHTML = `<div class="cell-detail-card">
+      <strong>🤖 Serve prima configurare l'AI</strong>
+      <p style="margin:8px 0 0;font-size:0.85rem;line-height:1.4;">
+        Nessun servizio AI è utilizzabile senza una configurazione minima. Puoi provare <strong>LLM7.io</strong> (senza chiave, ma instabile) oppure <strong>Groq</strong> (gratuito, richiede una chiave da creare in 2 minuti — trovi la guida passo passo qui sotto).
+      </p>
+      <div class="row" style="margin-top:10px;">
+        <button class="secondary" id="openAiConfigBtn" style="width:100%;">⚙️ Apri Impostazioni AI</button>
+      </div>
+    </div>`;
+    const openBtn = targetEl.querySelector("#openAiConfigBtn");
+    if (openBtn) openBtn.addEventListener("click", () => {
+      openModal(document.getElementById("configModalBackdrop"));
+      document.querySelector('.config-tab[data-tab="ai"]').click();
+    });
+    return;
+  }
+  targetEl.innerHTML = '<span class="status">Chiedo un parere all\'AI...</span>';
+  try {
+    const payload = {
+      model: cfg.model,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.3,
+      max_tokens: 900
+    };
+    // reasoning_effort è specifico dei modelli "reasoning" (es. gpt-oss su Groq);
+    // lo mandiamo solo verso Groq per non rischiare errori su altri provider.
+    if (cfg.baseUrl.includes("groq.com")) payload.reasoning_effort = "low";
+    const headers = { "Content-Type": "application/json" };
+    if (cfg.apiKey) headers["Authorization"] = `Bearer ${cfg.apiKey}`;
+    const res = await fetch(cfg.baseUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const json = await res.json();
+    const choice = json.choices?.[0];
+    let text = choice?.message?.content || "";
+    if (!text) text = "Nessuna risposta ricevuta.";
+    const cutOff = choice?.finish_reason === "length";
+    targetEl.innerHTML = `<div class="cell-detail-card"><strong>${titleHtml}</strong><p style="margin:8px 0 0;font-size:0.85rem;line-height:1.4;">${esc(text).replace(/\n/g, "<br>")}</p>${cutOff ? '<div style="color:var(--warn);font-size:0.72rem;margin-top:6px;">⚠️ Risposta interrotta per limite di lunghezza.</div>' : ''}</div>`;
+  } catch (err) {
+    targetEl.innerHTML = `<span class="error">Errore nel contattare l'AI: ${err.message}. Verifica URL, modello e chiave.</span>`;
+  }
+}
+
+async function askAi(loc, data, models, dateIdx, targetEl) {
+  await callAiApi(buildAiPrompt(loc, data, models, dateIdx), targetEl, "💬 Commento sulle previsioni");
+}
+
+async function askAi24h(loc, data, models, targetEl) {
+  await callAiApi(buildAi24hPrompt(loc, data, models), targetEl, "🕐 Andamento nelle prossime 24 ore");
+}
+
+async function askAiTrend(loc, data, models, targetEl) {
+  await callAiApi(buildAiTrendPrompt(loc, data, models), targetEl, "📈 Andamento nei prossimi giorni");
+}
+
+if (favorites.length > 0) {
+  loadLocation(favorites[0]);
+}
+
+// --- Pannelli Aiuto / Impostazioni (bottom sheet) ---
+function openModal(backdrop) { backdrop.classList.add("show"); }
+function closeModal(backdrop) { backdrop.classList.remove("show"); }
+
+const helpBackdrop = document.getElementById("helpModalBackdrop");
+const configBackdrop = document.getElementById("configModalBackdrop");
+const contactsBackdrop = document.getElementById("contactsModalBackdrop");
+
+document.getElementById("helpBtn").addEventListener("click", () => openModal(helpBackdrop));
+document.getElementById("helpCloseBtn").addEventListener("click", () => closeModal(helpBackdrop));
+helpBackdrop.addEventListener("click", (e) => { if (e.target === helpBackdrop) closeModal(helpBackdrop); });
+
+document.getElementById("contactsBtn").addEventListener("click", () => openModal(contactsBackdrop));
+document.getElementById("contactsCloseBtn").addEventListener("click", () => closeModal(contactsBackdrop));
+contactsBackdrop.addEventListener("click", (e) => { if (e.target === contactsBackdrop) closeModal(contactsBackdrop); });
+
+document.getElementById("refreshHeaderBtn").addEventListener("click", () => {
+  if (activeLoc) {
+    loadLocation(activeLoc, true);
+  } else {
+    showToast("Apri prima una località per poterla aggiornare");
+  }
+});
+
+const bollettiniBackdrop = document.getElementById("bollettiniModalBackdrop");
+document.getElementById("heroBollettiniBtn").addEventListener("click", () => {
+  if (!activeLoc) {
+    showToast("Apri prima una località");
+    return;
+  }
+  const links = officialLinks(activeLoc);
+  document.getElementById("bollettiniModalBody").innerHTML = links.map(l =>
+    `<a class="link-item" href="${l.url}" target="_blank" rel="noopener"><span>${l.label}${l.note ? ' <span style="color:var(--muted);font-size:0.7rem;">(' + l.note + ')</span>' : ''}</span><span class="go">Apri →</span></a>`
+  ).join("");
+  openModal(bollettiniBackdrop);
+});
+document.getElementById("bollettiniCloseBtn").addEventListener("click", () => closeModal(bollettiniBackdrop));
+bollettiniBackdrop.addEventListener("click", (e) => { if (e.target === bollettiniBackdrop) closeModal(bollettiniBackdrop); });
+
+document.getElementById("configBtn").addEventListener("click", () => openModal(configBackdrop));
+document.getElementById("configCloseBtn").addEventListener("click", () => closeModal(configBackdrop));
+configBackdrop.addEventListener("click", (e) => { if (e.target === configBackdrop) closeModal(configBackdrop); });
+
+document.querySelectorAll(".config-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".config-tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".config-pane").forEach(p => p.style.display = "none");
+    tab.classList.add("active");
+    document.querySelector(`.config-pane[data-pane="${tab.dataset.tab}"]`).style.display = "block";
+  });
+});
+
+// --- Avviso prima di uscire: ricorda di salvare su file ---
+// Nota: per motivi di sicurezza i browser da anni non permettono di personalizzare
+// il testo di questo avviso (mostrano sempre un messaggio generico del tipo
+// "Vuoi uscire dal sito? Le modifiche potrebbero non essere salvate"), quindi non
+// possiamo scrivere direttamente "vuoi esportare su file?" dentro il popup nativo.
+window.addEventListener("beforeunload", (e) => {
+  if (favorites.length > 0) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+</script>
+</body>
+</html>
