@@ -33,7 +33,7 @@ Per metterlo sulla schermata Home del telefono (si apre a schermo intero, come u
 > ```bash
 > python -m http.server 8080
 > ```
-> poi apri `http://localhost:8080/meteo_alpi.html`
+> poi apri `http://localhost:8080/index.html`
 
 ## Fonti dati
 
@@ -73,6 +73,9 @@ La chiave API resta salvata **solo sul dispositivo** (localStorage del browser) 
 
 I dati grezzi di modello **non sostituiscono i bollettini ufficiali** (ARPA, Protezione Civile, MeteoSwiss, Météo-France) né i bollettini valanghe (AINEVA, Meteomont). In montagna la divergenza tra modelli è frequente: usa questo strumento per capire il margine di incertezza, **non come previsione definitiva**. Le decisioni in ambiente alpino restano responsabilità di chi le prende.
 
+## Documentazione
+
+Il manuale completo, corredato di schermate e istruzioni operative, è disponibile qui: [Meteo_Alpi_Manuale.docx](Meteo_Alpi_Manuale.docx).
 
 ## Contatti
 
